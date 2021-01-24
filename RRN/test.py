@@ -27,7 +27,7 @@ parser.add_argument('--seed', type=int, default=0, help='random seed to use. Def
 parser.add_argument('--gpus', default=1, type=int, help='number of gpu')
 parser.add_argument('--cuda',default=True, type=bool)
 parser.add_argument('--layer', type=int, default=10, help='network layer')
-parser.add_argument('--test_dir',type=str,default='/home/panj/data/Vid4')
+parser.add_argument('--test_dir',type=str,default='/mnt/data/SuperRes/a')
 #parser.add_argument('--test_dir',type=str,default='/home/panj/data/udm10')
 #parser.add_argument('--test_dir',type=str,default='/home/panj/data/SPMC_test')
 parser.add_argument('--save_test_log', type=str,default='./log/test')
@@ -68,7 +68,8 @@ def main():
     PSNR_avg = 0
     SSIM_avg = 0
     count = 0
-    scene_list = ['calendar','city','foliage','walk'] # Vid4
+    scene_list = os.listdir(opt.test_dir)
+    #scene_list = ['calendar','city','foliage','walk'] # Vid4
     #scene_list = ['archpeople','archwall','auditorium','band','caffe','camera','lake','clap','photography','polyflow'] # UDM10
     #scene_list = ['car05_001', 'hdclub_003_001', 'hitachi_isee5_001', 'hk004_001', 'HKVTG_004', 'jvc_009_001', 'NYVTG_006', 'PRVTG_012', 'RMVTG_011', 'veni3_011', 'veni5_015'] # SPMCS
 

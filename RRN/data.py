@@ -8,9 +8,9 @@ def transform():
              ToTensor(),
             ])
 
-def get_training_set(data_dir, upscale_factor, data_augmentation, file_list):
-    return DataloadFromFolder(data_dir, upscale_factor, data_augmentation, file_list, transform=transform())
+def get_training_set(data_dir, upscale_factor, data_augmentation, file_list, rgb_type):
+    return DataloadFromFolder(data_dir, upscale_factor, data_augmentation, file_list, transform=transform(), rgb_type=rgb_type)
 
 def get_test_set(data_dir, upscale_factor, scene_name):
-    return DataloadFromFolderTest(data_dir, upscale_factor, scene_name, transform=transform())
+    return DataloadFromFolderTest(data_dir, upscale_factor, scene_name, transform=transform(), rgb_type=rgb_type)
 

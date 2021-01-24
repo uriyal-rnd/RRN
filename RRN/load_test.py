@@ -6,6 +6,7 @@ from PIL import Image, ImageOps
 import random
 from Gaussian_downsample import gaussian_downsample
 from bicubic import imresize
+from utils import our_normalize
 
 def modcrop(img,scale):
     (iw, ih) = img.size
@@ -15,7 +16,7 @@ def modcrop(img,scale):
     return img
 
 class DataloadFromFolderTest(data.Dataset): # load test dataset
-    def __init__(self, image_dir, scale, scene_name, transform):
+    def __init__(self, image_dir, scale, scene_name, transform, rgb_type=True):
         super(DataloadFromFolderTest, self).__init__()
         alist = os.listdir(os.path.join(image_dir, scene_name))
         alist.sort()
@@ -23,17 +24,31 @@ class DataloadFromFolderTest(data.Dataset): # load test dataset
         self.L = len(alist)
         self.scale = scale
         self.transform = transform # To_tensor
+        self.rgb_type = rgb_type
     def __getitem__(self, index):
         target = []
         for i in range(self.L):
-            GT_temp = modcrop(Image.open(self.image_filenames[i]).convert('RGB'), self.scale)
+            if self.rgb_type:
+                GT_temp = modcrop(Image.open(self.image_filenames[i]).convert('RGB'), self.scale)
+            else:
+                GT_temp = modcrop(Image.open(self.image_filenames[i]), self.scale)
+                GT_temp = our_normalize(GT_temp)
             target.append(GT_temp)
         target = [np.asarray(HR) for HR in target] 
         target = np.asarray(target)
         if self.scale == 4:
-            target = np.lib.pad(target, pad_width=((0,0), (2*self.scale,2*self.scale), (2*self.scale,2*self.scale), (0,0)), mode='reflect')
-        t, h, w, c = target.shape
-        target = target.transpose(1,2,3,0).reshape(h,w,-1) # numpy, [H',W',CT']
+            if self.rgb_type:
+                target = np.lib.pad(target, pad_width=((0,0), (2*self.scale,2*self.scale), (2*self.scale,2*self.scale), (0,0)), mode='reflect')
+            else:
+                target = np.lib.pad(target, pad_width=((0,0), (2*self.scale,2*self.scale), (2*self.scale,2*self.scale)), mode='reflect')
+        if self.rgb_type:
+            t, h, w, c = target.shape
+            target = target.transpose(1, 2, 3, 0).reshape(h, w, -1)  # numpy, [H',W',CT']
+        else:
+            t, h, w = target.shape
+            c = 1
+            target = target.transpose(1, 2, 0).reshape(h, w, -1)  # numpy, [H',W',CT']
+
         if self.transform:
             target = self.transform(target) # Tensor, [CT',H',W']
         target = target.view(c,t,h,w)

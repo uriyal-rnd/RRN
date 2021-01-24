@@ -7,6 +7,10 @@ import json
 import os.path as osp
 import torch
 import warnings
+import numpy as np
+from PIL import Image
+
+
 def mkdir_if_missing(directory):
     if not osp.exists(directory):
         try:
@@ -125,3 +129,8 @@ def legacy_get_string(size_average, reduce, emit_warning=True):
         warnings.warn(warning.format(ret))
     return ret
 
+def our_normalize(pil_image):
+    arr = np.array(pil_image)
+    arr = (arr - arr.mean()) / (10*arr.std() + 1e-8)
+    new_img = Image.fromarray(arr)
+    return new_img

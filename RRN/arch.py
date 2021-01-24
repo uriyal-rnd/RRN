@@ -34,15 +34,16 @@ class ResidualBlock_noBN(nn.Module):
         return identity + out
 
 class neuro(nn.Module):
-    def __init__(self, n_c, n_b, scale):
+    def __init__(self, n_c, n_b, scale, rgb_type):
         super(neuro,self).__init__()
         pad = (1,1)
         block = []
-        self.conv_1 = nn.Conv2d(scale**2*3 + n_c + 3*2, n_c, (3,3), stride=(1,1), padding=pad)
+        chs = 3 if rgb_type else 1
+        self.conv_1 = nn.Conv2d(scale**2*chs + n_c + chs*2, n_c, (3,3), stride=(1,1), padding=pad)
         basic_block = functools.partial(ResidualBlock_noBN, nf=n_c)
         self.recon_trunk = make_layer(basic_block, n_b)
         self.conv_h = nn.Conv2d(n_c, n_c, (3,3), stride=(1,1), padding=pad)
-        self.conv_o = nn.Conv2d(n_c, scale**2*3, (3,3), stride=(1,1), padding=pad)
+        self.conv_o = nn.Conv2d(n_c, scale**2*chs, (3,3), stride=(1,1), padding=pad)
         initialize_weights([self.conv_1, self.conv_h, self.conv_o], 0.1)
     def forward(self, x, h, o):
         x = torch.cat((x, h, o), dim=1)
@@ -53,13 +54,14 @@ class neuro(nn.Module):
         return x_h, x_o
 
 class RRN(nn.Module):
-    def __init__(self, scale, n_c, n_b):
+    def __init__(self, scale, n_c, n_b, rgb_type=True):
         super(RRN, self).__init__()
-        self.neuro = neuro(n_c, n_b, scale)
+        self.neuro = neuro(n_c, n_b, scale, rgb_type)
         self.scale = scale
         self.down = PixelUnShuffle(scale)
         self.n_c = n_c
-        
+        self.rgb_type = rgb_type
+
     def forward(self, x, x_h, x_o, init):
         _,_,T,_,_ = x.shape
         f1 = x[:,:,0,:,:]
